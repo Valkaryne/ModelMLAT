@@ -266,7 +266,9 @@ ApplicationWindow {
         SpinBox {
             minimumValue: -100
             maximumValue: 100
-            // Change time delay on MapComponent
+            onValueChanged: {
+                map.timeDelay = value
+            }
         }
     }
 }

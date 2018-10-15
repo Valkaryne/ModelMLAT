@@ -17,10 +17,12 @@ Map {
 
     property variant target
     property bool targetExists: false
+    property variant timeDelay
+    property variant prevTimeDelay
     property variant targetPrevPosition;
 
     property variant top1
-    property variant top2
+    //property variant top2
 
     property variant mainCurve
     property variant curveRed
@@ -101,8 +103,16 @@ Map {
         if (beaconCounter > 1) {
             setCentersForBases()
         }
+        if (timeDelay !== prevTimeDelay) {
+            prevTimeDelay = timeDelay
+            var beaconA = beacons[0].coordinate
+            var beaconB = beacons[1].coordinate
+            resetTops()
+            setTops(beaconA, beaconB, baseCentres[0].coordinate)
+        }
+
         // TODO: clean the code
-        if (targetExists) {
+        /* if (targetExists) {
             targetDirectionLine.resetGeometry()
             targetDirectionLine.setSimplexGeometry(beacons, target)
             if (target.coordinate !== targetPrevPosition) {
@@ -189,20 +199,36 @@ Map {
                     curveYellow.setColor('#dfdf00')
                 }
             }
-        }
+        } */
     }
 
-    function setTops(coordinates) {
-        console.log("Top coordinates: " + coordinates)
+    function setTops(beaconA, beaconB, baseCentre) {
         top1 = Qt.createQmlObject('Top {}', map)
-        top2 = Qt.createQmlObject('Top {}', map)
         addMapItem(top1)
-        addMapItem(top2)
         top1.z = map.z + 1
-        top2.z = map.z + 1
 
-        top1.coordinate = map.toCoordinate(Qt.point(coordinates[0], coordinates[1]))
-        top2.coordinate = map.toCoordinate(Qt.point(coordinates[2], coordinates[3]))
+        if (beaconA.longitude > beaconB.longitude) {
+            var temp = beaconB;
+            beaconB = beaconA;
+            beaconA = temp
+        }
+
+        var rangeDiff = 0.5 * timeDelay * 3//* 0.3
+        var topArray
+
+        if (rangeDiff < 0) {
+            topArray = Helper.calculateTopPosition(rangeDiff, beaconA.latitude, beaconA.longitude,
+                                                   baseCentre.latitude, baseCentre.longitude)
+        } else if (rangeDiff > 0) {
+            topArray = Helper.calculateTopPosition(rangeDiff, beaconB.latitude, beaconB.longitude,
+                                                   baseCentre.latitude, baseCentre.longitude)
+        }
+        //console.log("Top: " + topArray[0] + ", " + topArray[1])
+        top1.coordinate.latitude = topArray[0]
+        top1.coordinate.longitude = topArray[1]
+        console.log("Top1: " + top1.coordinate.latitude + ", " + top1.coordinate.longitude)
+
+        //top2.coordinate = map.toCoordinate(Qt.point(coordinates[2], coordinates[3]))
 
         /*
          * console.log("Top1: " + top1.coordinate.latitude + ", " + top1.coordinate.longitude)
@@ -214,10 +240,6 @@ Map {
         if (map.top1 !== 0) {
             map.removeMapItem(map.top1)
             //map.top1.destroy()
-        }
-        if (map.top2 !== 0) {
-            map.removeMapItem(map.top2)
-            //map.top2.destroy()
         }
     }
 
