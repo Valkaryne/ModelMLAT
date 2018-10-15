@@ -1,0 +1,35 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>helper.js</file>
+        <file>map/MapComponent.qml</file>
+        <file>map/MapSliders.qml</file>
+        <file>resources/icon.png</file>
+        <file>resources/marker.png</file>
+        <file>resources/scale.png</file>
+        <file>resources/scale_end.png</file>
+        <file>map/CircleItem.qml</file>
+        <file>resources/logo.png</file>
+        <file>map/ImageItem.qml</file>
+        <file>map/RectangleItem.qml</file>
+        <file>map/PolylineItem.qml</file>
+        <file>map/PolygonItem.qml</file>
+        <file>map/Marker.qml</file>
+        <file>menus/ItemPopupMenu.qml</file>
+        <file>menus/MainMenu.qml</file>
+        <file>menus/MapPopupMenu.qml</file>
+        <file>menus/MarkerPopupMenu.qml</file>
+        <file>resources/Angle.png</file>
+        <file>resources/Beacon.png</file>
+        <file>resources/Center.png</file>
+        <file>resources/Target.png</file>
+        <file>resources/Top.png</file>
+        <file>map/Angle.qml</file>
+        <file>map/Beacon.qml</file>
+        <file>map/Center.qml</file>
+        <file>map/Target.qml</file>
+        <file>map/Top.qml</file>
+        <file>map/DotLineItem.qml</file>
+        <file>map/CurveItem.qml</file>
+    </qresource>
+</RCC>
