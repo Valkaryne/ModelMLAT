@@ -107,8 +107,88 @@ Map {
             prevTimeDelay = timeDelay
             var beaconA = beacons[0].coordinate
             var beaconB = beacons[1].coordinate
+
+            if (beaconA.longitude > beaconB.longitude) {
+                var temp = beaconB;
+                beaconB = beaconA;
+                beaconA = temp
+            }
+
             resetTops()
             setTops(beaconA, beaconB, baseCentres[0].coordinate)
+            beaconA = map.fromCoordinate(beaconA)
+            beaconB = map.fromCoordinate(beaconB)
+            model.setBase(0, beaconA.y, beaconA.x, beaconB.y, beaconB.x)
+            var baseCenter = map.fromCoordinate(baseCentres[0].coordinate)
+            model.setCenter(0, baseCenter.y, baseCenter.x)
+
+            var top = map.fromCoordinate(top1.coordinate)
+            model.updateBasis(0, top.y, top.x, timeDelay)
+            model.getCurveCoordinates(0, true)
+            model.findAngleDeviation(0)
+
+            map.removeMapItem(map.curveRed)
+            map.removeMapItem(map.curveYellow)
+            map.removeMapItem(map.curveGreen)
+            map.removeMapItem(map.curveBlue)
+            if (beaconA.y > beaconB.y) {
+
+                var redArray = model.getRotatedCoordinates(0, 0); // red cat
+                var pntRed = new Array();
+                for (var i = 0; i < redArray.length; i += 2) {
+                    pntRed.push(map.toCoordinate(Qt.point(redArray[i], redArray[i+1])))
+                }
+                var co = Qt.createComponent('CurveItem' + '.qml')
+                if (co.status == Component.Ready) {
+                    curveRed = co.createObject(map)
+                    curveRed.setGeometry(pntRed)
+                    map.addMapItem(curveRed)
+                    curveRed.setColor('red')
+                }
+
+                model.getCurveCoordinates(0, false)
+                var yellowArray = model.getRotatedCoordinates(0, 3); // yellow cat
+                var pntYellow = new Array();
+                for (var i = 0; i < yellowArray.length; i += 2) {
+                    pntYellow.push(map.toCoordinate(Qt.point(yellowArray[i], yellowArray[i+1])))
+                }
+                var co = Qt.createComponent('CurveItem' + '.qml')
+                if (co.status == Component.Ready) {
+                    //map.removeMapItem(map.curveYellow)
+                    curveYellow = co.createObject(map)
+                    curveYellow.setGeometry(pntYellow)
+                    map.addMapItem(curveYellow)
+                    curveYellow.setColor('#dfdf00')
+                }
+            } else if (beaconA.y <= beaconB.y) {
+                var greenArray = model.getRotatedCoordinates(0, 1); // green cat
+                var pntGreen = new Array();
+                for (var i = 0; i < greenArray.length; i += 2) {
+                    pntGreen.push(map.toCoordinate(Qt.point(greenArray[i], greenArray[i+1])))
+                }
+                var co = Qt.createComponent('CurveItem' + '.qml')
+                if (co.status == Component.Ready) {
+                    //map.removeMapItem(map.curveGreen)
+                    curveGreen = co.createObject(map)
+                    curveGreen.setGeometry(pntGreen)
+                    map.addMapItem(curveGreen)
+                    curveGreen.setColor('green')
+                }
+                model.getCurveCoordinates(0, false)
+                var blueArray = model.getRotatedCoordinates(0, 2); // blue cat
+                var pntBlue = new Array();
+                for (var i = 0; i < blueArray.length; i += 2) {
+                    pntBlue.push(map.toCoordinate(Qt.point(blueArray[i], blueArray[i+1])))
+                }
+                var co = Qt.createComponent('CurveItem' + '.qml')
+                if (co.status == Component.Ready) {
+                    //map.removeMapItem(map.curveBlue)
+                    curveBlue = co.createObject(map)
+                    curveBlue.setGeometry(pntBlue)
+                    map.addMapItem(curveBlue)
+                    curveBlue.setColor('blue')
+                }
+            }
         }
 
         // TODO: clean the code
@@ -207,13 +287,7 @@ Map {
         addMapItem(top1)
         top1.z = map.z + 1
 
-        if (beaconA.longitude > beaconB.longitude) {
-            var temp = beaconB;
-            beaconB = beaconA;
-            beaconA = temp
-        }
-
-        var rangeDiff = 0.5 * timeDelay * 3//* 0.3
+        var rangeDiff = 0.5 * timeDelay * 0.3
         var topArray
 
         if (rangeDiff < 0) {
@@ -223,16 +297,13 @@ Map {
             topArray = Helper.calculateTopPosition(rangeDiff, beaconB.latitude, beaconB.longitude,
                                                    baseCentre.latitude, baseCentre.longitude)
         }
-        //console.log("Top: " + topArray[0] + ", " + topArray[1])
         top1.coordinate.latitude = topArray[0]
         top1.coordinate.longitude = topArray[1]
         console.log("Top1: " + top1.coordinate.latitude + ", " + top1.coordinate.longitude)
 
-        //top2.coordinate = map.toCoordinate(Qt.point(coordinates[2], coordinates[3]))
 
         /*
          * console.log("Top1: " + top1.coordinate.latitude + ", " + top1.coordinate.longitude)
-         * console.log("Top2: " + top2.coordinate.latitude + ", " + top2.coordinate.longitude)
          */
     }
 

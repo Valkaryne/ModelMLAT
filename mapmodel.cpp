@@ -51,29 +51,23 @@ void MapModel::setCenter(int key, double cY, double cX)
      */
 }
 
-void MapModel::setTarget(double targetY, double targetX)
-{
-    this->target_y = -1 * targetY - bottomY;
-    this->target_x = targetX - bottomX;
-
-    /*
-     * qDebug() << "target_y: " << QString::number(this->target_y,'f',6);
-     * qDebug() << "target_x: " << QString::number(this->target_x,'f',6);
-     */
-}
-
-void MapModel::updateBasis(int key)
+void MapModel::updateBasis(int key, double topY, double topX, double delay)
 {
     if (basis.contains(key))
         basis.remove(key);
+
+    if (delays.contains(key))
+        delays.remove(key);
+
+    delays.insert(key, delay);
 
     QVector<double> temp_basis;
     double ax = aPoint_x.value(key);
     double ay = aPoint_y.value(key);
     double bx = bPoint_x.value(key);
     double by = bPoint_y.value(key);
-    double tx = target_x;
-    double ty = target_y;
+    double cx = cPoint_x.value(key);
+    double cy = cPoint_y.value(key);
 
     /*
      * qDebug() << "tx: " << QString::number(tx,'f',6);
@@ -84,11 +78,10 @@ void MapModel::updateBasis(int key)
      * qDebug() << "by: " << QString::number(by,'f',6);
      */
 
-    double a_t = sqrt(pow(tx - ax, 2) + pow(ty - ay, 2));
-    double b_t = sqrt(pow(tx - bx, 2) + pow(ty - by, 2));
+    double top_y = -1 * topY - bottomY;
+    double top_x = topX - bottomX;
 
-    double a_AB = (a_t - b_t) / 2;
-
+    double a_AB = sqrt(pow(cx - top_x, 2) + pow(cy - top_y, 2));
     double c_AB = sqrt(pow(ax - bx, 2) + pow(ay - by, 2)) / 2;
     double b_AB = sqrt(pow(c_AB, 2) - pow(a_AB, 2));
 
@@ -99,42 +92,12 @@ void MapModel::updateBasis(int key)
     basis.insert(key, temp_basis);
 }
 
-QVector<double> MapModel::topCoordinates(int key)
-{
-    QVector<double> coordinates;
-
-    double ax = aPoint_x.value(key);
-    double ay = aPoint_y.value(key);
-    double bx = bPoint_x.value(key);
-    double by = bPoint_y.value(key);
-    double cx = cPoint_x.value(key);
-    double cy = cPoint_y.value(key);
-
-    double a_AB = basis.value(key).at(0);
-
-    double a_c = sqrt(pow(ax - cx, 2) + pow(ay - cy, 2));
-    double lambda = (a_c - qAbs(a_AB))/(a_c - (a_c - qAbs(a_AB)));
-    double a_x = (ax + lambda * cx)/(1 + lambda);
-    double a_y = (ay + lambda * cy)/(1 + lambda);
-    coordinates.append(a_x + bottomX);
-    coordinates.append(-1 * (a_y + bottomY));
-
-    double b_c = sqrt(pow(bx - cx, 2) + pow(by - cy, 2));
-    lambda = (b_c - qAbs(a_AB))/(b_c - (b_c - qAbs(a_AB)));
-    a_x = (bx + lambda * cx)/(1 + lambda);
-    a_y = (by + lambda * cy)/(1 + lambda);
-    coordinates.append(a_x + bottomX);
-    coordinates.append(-1 * (a_y + bottomY));
-
-    return coordinates;
-}
-
 void MapModel::updateMapEdges(double topX, double topY, double bottomX, double bottomY)
 {
-    this->topX = topX - bottomX / 2;
-    this->bottomX = bottomX - bottomX / 2;
-    this->topY = -1 * topY + bottomY / 2;
-    this->bottomY = -1 * bottomY + bottomY / 2;
+    this->topX = (topX - bottomX / 2);
+    this->bottomX = (bottomX - bottomX / 2);
+    this->topY = (-1 * topY + bottomY / 2);
+    this->bottomY = (-1 * bottomY + bottomY / 2);
 
     /*
      * qDebug() << "topX: " << QString::number(this->topX,'f',6);
@@ -144,7 +107,7 @@ void MapModel::updateMapEdges(double topX, double topY, double bottomX, double b
      */
 }
 
-QVector<double> MapModel::getCurveCoordinates(int key)
+QVector<double> MapModel::getCurveCoordinates(int key, bool isForward)
 {
     if (hyperbolaX.contains(key))
         hyperbolaX.remove(key);
@@ -155,14 +118,28 @@ QVector<double> MapModel::getCurveCoordinates(int key)
 
     double a_AB = basis.value(key).at(0);
     double b_AB = basis.value(key).at(2);
-    double increment = (bottomX - topX) / samplesLength;
 
     double cx = cPoint_x.value(key);
     double cy = cPoint_y.value(key);
 
+    double delay = delays.value(key);
+    double increment = bottomX / samplesLength;
     QVector<double> x_samples;
-    for (int i = 0; i < samplesLength; i++) {
-        x_samples.append(topX + i * increment);
+    if (delay < 0) {
+        for (int i = 0; i < samplesLength; i++) {
+            x_samples.append(topX + i * increment);
+        }
+    } else {
+        for (int i = 0; i < samplesLength; i++) {
+            x_samples.append(0 + i * increment);
+        }
+    }
+
+    if (!isForward) {
+        std::sort(x_samples.begin(), x_samples.end(), std::greater<int>());
+        for (double &s : x_samples) {
+            s *= -1;
+        }
     }
 
     QVector<double> y_samples, y_samples_sh;
